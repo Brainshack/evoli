@@ -3,6 +3,7 @@ use amethyst::{core::Time, core::Transform, ecs::*};
 use std::f32;
 
 use crate::components::digestion::{Digestion, Fullness};
+use crate::components::combat::Health;
 
 pub struct DigestionSystem;
 
@@ -27,12 +28,15 @@ pub struct StarvationSystem;
 
 // Entities die if their fullness reaches zero (or less).
 impl<'s> System<'s> for StarvationSystem {
-    type SystemData = (ReadStorage<'s, Fullness>, Entities<'s>);
+    type SystemData = (
+        ReadStorage<'s, Fullness>,
+        WriteStorage<'s, Health>,
+    );
 
-    fn run(&mut self, (fullnesses, entities): Self::SystemData) {
-        for (fullness, entity) in (&fullnesses, &*entities).join() {
+    fn run(&mut self, (fullnesses, mut healths): Self::SystemData) {
+        for (fullness, mut health) in (&fullnesses, &mut healths).join() {
             if fullness.value < f32::EPSILON {
-                let _ = entities.delete(entity);
+                health.value = 0.0;
             }
         }
     }
